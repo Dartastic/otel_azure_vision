@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_azure_vision_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_azure_vision';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class AzureVisionResult {
+  /// Creates a result.
   const AzureVisionResult({
     this.tagCount,
     this.objectCount,
@@ -39,8 +40,13 @@ class AzureVisionResult {
   final String? smartCropAspectRatios;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class AzureVisionCallResult<T> {
+  /// Creates a call result.
   const AzureVisionCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final AzureVisionResult? result;
 }
@@ -71,67 +77,67 @@ Future<T> tracedAzureVision<T>({
   final span = _tracer().startSpan(
     'vision $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.tagCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'azure.vision.tag_count',
           r.result!.tagCount!,
         ));
       }
       if (r.result!.objectCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'azure.vision.object_count',
           r.result!.objectCount!,
         ));
       }
       if (r.result!.peopleCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'azure.vision.people_count',
           r.result!.peopleCount!,
         ));
       }
       if (r.result!.readLineCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'azure.vision.read.line_count',
           r.result!.readLineCount!,
         ));
       }
       if (r.result!.readWordCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'azure.vision.read.word_count',
           r.result!.readWordCount!,
         ));
       }
       if (r.result!.adultClassification != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'azure.vision.adult_classification',
           r.result!.adultClassification!,
         ));
       }
       if (r.result!.captionConfidence != null) {
-        extras.add(OTel.attributeDouble(
+        extras.add(OTelAPI.attributeDouble(
           'azure.vision.caption.confidence',
           r.result!.captionConfidence!,
         ));
       }
       if (r.result!.smartCropAspectRatios != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'azure.vision.smart_crops.aspect_ratios',
           r.result!.smartCropAspectRatios!,
         ));
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
